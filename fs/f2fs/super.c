@@ -599,7 +599,6 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
 		seq_puts(seq, ",nobarrier");
 	if (test_opt(sbi, FASTBOOT))
 		seq_puts(seq, ",fastboot");
-	seq_printf(seq, ",active_logs=%u", sbi->active_logs);
 
 	return 0;
 }
