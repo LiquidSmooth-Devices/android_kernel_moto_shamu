@@ -192,7 +192,7 @@ void cpuidle_uninstall_idle_handler(void)
 {
 	if (enabled_devices) {
 		initialized = 0;
-		kick_all_cpus_sync();
+		wake_up_all_idle_cpus();
 	}
 }
 
@@ -499,13 +499,6 @@ EXPORT_SYMBOL_GPL(cpuidle_register);
 
 #ifdef CONFIG_SMP
 
-#if 0
-static void smp_callback(void *v)
-{
-	/* we already woke the CPU up, nothing more to do */
-}
-#endif
-
 /*
  * This function gets called when a part of the kernel has a new latency
  * requirement.  This means we need to get all processors out of their C-state,
@@ -522,7 +515,7 @@ static int cpuidle_latency_notify(struct notifier_block *b,
 	 * from idle, this can save the unnecessary wakeup cost, and reduce the
 	 * risk that drivers may request latency in irq disabled context.
 	 */
-	smp_call_function(smp_callback, NULL, 1);
+	wake_up_all_idle_cpus();
 #endif
 	return NOTIFY_OK;
 }
