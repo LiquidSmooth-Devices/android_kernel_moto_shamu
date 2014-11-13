@@ -46,6 +46,14 @@ static DEFINE_SPINLOCK(tz_lock);
 #define LONG_FRAME		25000
 
 /*
+ * Use BUSY_BIN to check for fully busy rendering
+ * intervals that may need early intervention when
+ * seen with LONG_FRAME lengths
+ */
+#define BUSY_BIN		95
+#define LONG_FRAME		25000
+
+/*
  * CEILING is 50msec, larger than any standard
  * frame length, but less than the idle timer.
  */
@@ -114,6 +122,7 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq,
 		stats.private_data = &b;
 	else
 		stats.private_data = NULL;
+
 	result = devfreq->profile->get_dev_status(devfreq->dev.parent, &stats);
 	if (result) {
 		pr_err(TAG "get_status failed %d\n", result);
