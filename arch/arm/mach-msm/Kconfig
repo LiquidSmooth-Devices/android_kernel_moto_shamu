@@ -1497,8 +1497,16 @@ config HAS_MACH_MEMUTILS
 
 config MSM_SLEEPER
 	bool "CPU hotplug driver"
-	default y
+	default n
 	help
 	  CPU hotplug driver
+
+config MSM_HOTPLUG
+	bool "MSM hotplug driver"
+	depends on HOTPLUG_CPU
+	default n
+	help
+	  The MSM hotplug driver controls on-/offlining of additional cores based
+	  on current cpu load.
 
 endif
