@@ -69,6 +69,7 @@
 #include <linux/gcd.h>
 #include <linux/freezer.h>
 #include <linux/sradix-tree.h>
+#include <linux/kernel.h>
 
 #include <asm/tlbflush.h>
 #include "internal.h"
@@ -180,7 +181,6 @@ static int is_full_zero(const void *s1, size_t len)
 }
 #endif
 
-#define U64_MAX		(~((u64)0))
 #define UKSM_RUNG_ROUND_FINISHED  (1 << 0)
 #define TIME_RATIO_SCALE	10000
 
@@ -1604,11 +1604,20 @@ static inline int check_collision(struct rmap_item *rmap_item,
 static struct page *page_trans_compound_anon(struct page *page)
 {
 	if (PageTransCompound(page)) {
-		struct page *head = compound_trans_head(page);
+		struct page *head;
+		head = compound_head(page);
 		/*
-		 * head may actually be splitted and freed from under
-		 * us but it's ok here.
+		 * head may be a dangling pointer.
+		 * __split_huge_page_refcount clears PageTail
+		 * before overwriting first_page, so if
+		 * PageTail is still there it means the head
+		 * pointer isn't dangling.
 		 */
+		if (head != page) {
+			smp_rmb();
+			if (!PageTransCompound(page))
+				return NULL;
+		}
 		if (PageAnon(head))
 			return head;
 	}
