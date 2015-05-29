@@ -44,12 +44,11 @@ static char *descriptions =
 	"21 Perf: Fix hrtimer operation across hotplug\n"
 	"22 Perf: add perf user-mode permissions\n"
 	"23 Perf: Add event type check in hrtimer hotplug fix\n"
-	"24 Perf: Add debugfs node to clear PMU\n"
-	"25 msm: perf: reset perf cycle counter on krait\n"
-	"26 Perf: interrupt disable without bringing cpus up\n"
-	"27 Perf: stop counters when going into hotplug\n"
-	"29 msm: perf: Refine disable/enable in tracecounters\n"
-	"30 Perf: reset pmu enables when starting perf\n"
+	"24 msm: perf: reset perf cycle counter on krait\n"
+	"25 Perf: interrupt disable without bringing cpus up\n"
+	"26 Perf: stop counters when going into hotplug\n"
+	"27 msm: perf: Refine disable/enable in tracecounters\n"
+	"28 Perf: reset pmu enables when starting perf\n"
 ;
 
 static ssize_t desc_read(struct file *fp, char __user *buf,
