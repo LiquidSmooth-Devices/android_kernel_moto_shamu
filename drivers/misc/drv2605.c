@@ -939,14 +939,6 @@ static void probe_work(struct work_struct *work)
 	/* Read calibration results */
 	drv260x_read_reg_val(reinit_sequence, sizeof(reinit_sequence));
 
-	if (drv260x->use_default_calibration) {
-		reinit_sequence[3] = drv260x->default_calibration[0];
-		reinit_sequence[5] = drv260x->default_calibration[1];
-		reinit_sequence[7] = drv260x->default_calibration[2];
-		reinit_sequence[9] = drv260x->default_calibration[3];
-		reinit_sequence[11] = drv260x->default_calibration[4];
-	}
-
 	/* Read device ID */
 	device_id = (status & DEV_ID_MASK);
 	switch (device_id) {
@@ -1163,21 +1155,31 @@ static struct file_operations fops = {
 };
 
 static ssize_t pwmvalue_show(struct device *dev,
-                struct device_attribute *attr, char *buf)
+			     struct device_attribute *attr, char *buf)
 {
-        size_t count = 0;
-        count += sprintf(buf, "%d\n", vibe_strength);
-        return count;
+	size_t count = 0;
+
+	count += sprintf(buf, "%d\n", vibe_strength);
+
+	return count;
 }
 
 static ssize_t pwmvalue_store(struct device *dev,
-                struct device_attribute *attr, const char *buf, size_t count)
+			      struct device_attribute *attr, const char *buf,
+			      size_t count)
 {
 	int vs = 0;
-        sscanf(buf, "%d ",&vs);
-        if (vs < 0 || vs > 127) vs = 100;
+
+	sscanf(buf, "%d ",&vs);
+	if (vs < 0)
+		vs = 0;
+	if (vs > 127)
+		vs = 127;
+
+	/* proper scaling is done in userspace */
 	vibe_strength = vs;
-        return count;
+
+	return count;
 }
 
 static DEVICE_ATTR(pwmvalue, (S_IWUSR|S_IRUGO), pwmvalue_show, pwmvalue_store);
