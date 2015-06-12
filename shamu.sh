@@ -16,14 +16,14 @@ DEFCONFIG="shamu_defconfig"
 
 # Kernel Details
 BASE_AK_VER="LiquidKernel"
-VER=".Shamu-v2.0-$curdate"
-AK_VER="$BASE_AK_VER$VER"
+VER=".v2.1_"
+CURDATE=$(date "+%m-%d-%Y")
+AK_VER="$BASE_AK_VER$VER$CURDATE"
 
 # Vars
 export CROSS_COMPILE=/home/teamliquid/Brock/liquid/prebuilts/gcc/linux-x86/arm/arm-eabi-6.0/bin/arm-eabi-
 export ARCH=arm
 export SUBARCH=arm
-export curdate=`date "+%m-%d-%Y"`
 
 # Paths
 KERNEL_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu"
@@ -47,7 +47,7 @@ function clean_all {
 function make_kernel {
 		echo
 		make $DEFCONFIG
-		script -q /home/teamliquid/Brock/Compile-$curdate.log -c "
+		script -q /home/teamliquid/Brock/Compile-$CURDATE.log -c "
 		make $THREAD "
 }
 
@@ -69,6 +69,7 @@ function make_zip {
 		cd $ZIP_DIR
 		zip -r9 kernel.zip *
 		mv  kernel.zip $ZIP_MOVE
+		rm $ZIP_DIR/kernel/zImage
 }
 
 function sign_zip {
@@ -125,6 +126,7 @@ case "$dchoice" in
 		make_boot
 		make_zip
 		sign_zip
+		clean_all
 		break
 		;;
 	n|N )

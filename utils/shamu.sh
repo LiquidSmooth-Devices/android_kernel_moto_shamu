@@ -1,92 +1,152 @@
 #!/bin/bash
+rm .version
+# Bash Color
+green='\033[01;32m'
+red='\033[01;31m'
+blink_red='\033[05;31m'
+restore='\033[0m'
 
-SOURCE="/home/teamliquid/Brock/liquid/kernel/moto/shamu"
-RAMDISK="/home/teamliquid/Brock/ramdisk"
-OUT="/home/teamliquid/Brock/liquid/out/target/product/shamu"
-ZIP="/home/teamliquid/Brock/utils/zip"
-UTILS="/home/teamliquid/Brock/utils"
-export ARCH=arm
+clear
+
+# Resources
+THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
+KERNEL="zImage"
+DTBIMAGE="dtb"
+DEFCONFIG="shamu_defconfig"
+
+# Kernel Details
+BASE_AK_VER="LiquidKernel"
+VER=".v2.1_"
+CURDATE=$(date "+%m-%d-%Y")
+AK_VER="$BASE_AK_VER$VER$CURDATE"
+
+# Vars
 export CROSS_COMPILE=/home/teamliquid/Brock/liquid/prebuilts/gcc/linux-x86/arm/arm-eabi-6.0/bin/arm-eabi-
-export curdate=`date "+%m-%d-%Y"`
+export ARCH=arm
+export SUBARCH=arm
 
-# Start Time
-res1=$(date +%s.%N)
+# Paths
+KERNEL_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu"
+REPACK_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/AnyKernel2"
+MODULES_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/AnyKernel2/modules"
+ZIP_MOVE="/www/devs/teamliquid/Kernels/shamu/"
+ZIMAGE_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/arch/arm/boot"
+ZIP_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/zip"
+UTILS="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils"
 
-# Colorize and add text parameters
-red=$(tput setaf 1) # red
-grn=$(tput setaf 2) # green
-cya=$(tput setaf 6) # cyan
-txtbld=$(tput bold) # Bold
-bldred=${txtbld}$(tput setaf 1) # red
-bldgrn=${txtbld}$(tput setaf 2) # green
-bldblu=${txtbld}$(tput setaf 4) # blue
-bldcya=${txtbld}$(tput setaf 6) # cyan
-txtrst=$(tput sgr0) # Reset
+# Functions
+function clean_all {
+		rm -rf $MODULES_DIR/*
+		cd $ZIP_DIR/kernel
+		rm -rf $DTBIMAGE
+		cd $KERNEL_DIR
+		echo
+		make clean && make mrproper
+}
 
-echo ""
+function make_kernel {
+		echo
+		make $DEFCONFIG
+		script -q /home/teamliquid/Brock/Compile-$CURDATE.log -c "
+		make $THREAD "
+}
 
-echo -e "${bldred} Use Defconfig Settings ${txtrst}"
-cd $SOURCE
-cp arch/arm/configs/shamu_defconfig .config
+function make_modules {
+		rm `echo $MODULES_DIR"/*"`
+		find $KERNEL_DIR -name '*.ko' -exec cp -v {} $MODULES_DIR \;
+}
 
-echo ""
+function make_dtb {
+		$REPACK_DIR/tools/dtbToolCM -2 -o $REPACK_DIR/$DTBIMAGE -s 2048 -p scripts/dtc/ arch/arm/boot/
+}
 
-echo -e "${bldred} Compiling zImage.. ${txtrst}"
-script -q /home/teamliquid/Brock/Compile.log -c "
-make -j12 "
-mv arch/arm/boot/zImage-dtb $OUT/kernel
+function make_boot {
+		cp -vr $ZIMAGE_DIR/zImage-dtb $ZIP_DIR/kernel/zImage
+}
 
-echo ""
 
-echo -e "${bldred} Compiling ramdisk.. ${txtrst}"
-cd $RAMDISK
-chmod 750 init* sbin/adbd* sbin/healthd
-chmod 644 default* uevent* res/images/charger/*
-chmod 755 res res/images res/images/charger
-chmod 640 fstab.shamu
-find . | cpio -o -H newc | gzip > $OUT/ramdisk.gz
+function make_zip {
+		cd $ZIP_DIR
+		zip -r9 kernel.zip *
+		mv  kernel.zip $ZIP_MOVE
+		rm $ZIP_DIR/kernel/zImage
+}
 
-echo ""
+function sign_zip {
+		cd $ZIP_MOVE
+		java -jar $UTILS/signapk.jar $UTILS/testkey.x509.pem $UTILS/testkey.pk8 kernel.zip `echo $AK_VER`.zip
+		rm kernel.zip
+		cd $KERNEL_DIR
+}
 
-echo -e "${bldred} Creating boot.img.. ${txtrst}"
-cd $OUT
-mkbootimg --kernel kernel --ramdisk ramdisk.gz --cmdline "console=ttyHSL0,115200,n8 androidboot.selinux=permissive androidboot.console=ttyHSL0 androidboot.hardware=shamu msm_rtb.filter=0x37 ehci-hcd.park=3 utags.blkdev=/dev/block/platform/msm_sdcc.1/by-name/utags utags.backup=/dev/block/platform/msm_sdcc.1/by-name/utagsBackup coherent_pool=8M" -o boot.img
+DATE_START=$(date +"%s")
 
-echo ""
 
-echo -e "${bldblu} Creating zip.. ${txtrst}"
-cp $OUT/boot.img $ZIP/boot.img
-cd $ZIP
-zip -r $OUT/LiquidKernel-shamu-Nightly.zip .
+echo "---------------"
+echo "Kernel Version:"
+echo "---------------"
 
-echo " "
+echo -e "${red}"; echo -e "${blink_red}"; echo "$AK_VER"; echo -e "${restore}";
 
-echo "${bldblu}Signing Zip ${txtrst}"
-cd $OUT
-java -jar $UTILS/signapk.jar $UTILS/testkey.x509.pem $UTILS/testkey.pk8 LiquidKernel-shamu-Nightly.zip LiquidKernel-5.1-shamu-$curdate.zip
-rm LiquidKernel-shamu-Nightly.zip
-rm $ZIP/boot.img
+echo -e "${green}"
+echo "-----------------"
+echo "Making LiquidKernel:"
+echo "-----------------"
+echo -e "${restore}"
 
-echo ""
+while read -p "Do you want to clean stuffs (y/n)? " cchoice
+do
+case "$cchoice" in
+	y|Y )
+		clean_all
+		echo
+		echo "All Cleaned now."
+		break
+		;;
+	n|N )
+		break
+		;;
+	* )
+		echo
+		echo "Invalid try again!"
+		echo
+		;;
+esac
+done
 
-echo "${bldblu}Uploading to DrDevs ${txtrst}"
-mv LiquidKernel-5.1-shamu-*.zip /www/devs/teamliquid/Kernels/shamu/
+echo
 
-echo -e "${bldgrn} Done! ${txtrst}"
+while read -p "Do you want to build kernel (y/n)? " dchoice
+do
+case "$dchoice" in
+	y|Y)
+		make_kernel
+		make_dtb
+		make_modules
+		make_boot
+		make_zip
+		sign_zip
+		clean_all
+		break
+		;;
+	n|N )
+		break
+		;;
+	* )
+		echo
+		echo "Invalid try again!"
+		echo
+		;;
+esac
+done
 
-echo ""
+echo -e "${green}"
+echo "-------------------"
+echo "Build Completed in:"
+echo "-------------------"
+echo -e "${restore}"
 
-echo -e "${bldred} Cleaning up ${txtrst}"
-rm $OUT/kernel
-rm $OUT/boot.img
-rm $SOURCE/arch/arm/boot/zImage
-rm $OUT/ramdisk.gz
-cd $SOURCE
-make mrproper
-
-echo ""
-
-# Show Elapsed Time
-res2=$(date +%s.%N)
-echo "${bldgrn}Total elapsed time: ${txtrst}${grn}$(echo "($res2 - $res1) / 60"|bc ) minutes ($(echo "$res2 - $res1"|bc ) seconds) ${txtrst}"
-
+DATE_END=$(date +"%s")
+DIFF=$(($DATE_END - $DATE_START))
+echo "Time: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
+echo
