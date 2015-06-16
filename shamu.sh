@@ -16,7 +16,7 @@ DEFCONFIG="shamu_defconfig"
 
 # Kernel Details
 BASE_AK_VER="LiquidKernel"
-VER=".v2.1_"
+VER=".v2.1.1_"
 CURDATE=$(date "+%m-%d-%Y")
 AK_VER="$BASE_AK_VER$VER$CURDATE"
 
