@@ -21,8 +21,6 @@
 #include <linux/msm_adreno_devfreq.h>
 #include <soc/qcom/scm.h>
 #include "governor.h"
-#include <linux/powersuspend.h>
-
 
 static DEFINE_SPINLOCK(tz_lock);
 
