@@ -17,8 +17,10 @@ DEFCONFIG="shamu_defconfig"
 # Kernel Details
 BASE_AK_VER="LiquidKernel"
 VER=".v2.2.2_"
+BRANCH="bfs-"
 CURDATE=$(date "+%m-%d-%Y")
 AK_VER="$BASE_AK_VER$VER$CURDATE"
+AK_VER_BFS="$BASE_AK_VER$VER$BRANCH$CURDATE"
 
 # Vars
 export CROSS_COMPILE=/home/teamliquid/Brock/liquid/prebuilts/gcc/linux-x86/arm/arm-eabi-6.0/bin/arm-eabi-
@@ -42,6 +44,18 @@ function clean_all {
 		cd $KERNEL_DIR
 		echo
 		make clean && make mrproper
+}
+
+function checkout_bfs {
+		cd $KERNEL_DIR
+		echo
+		git fetch lsd && git branch temp && git checkout lsd/bfs && git merge temp && git branch -D temp
+}
+
+function checkout_5.1 {
+		cd $KERNEL_DIR
+		echo
+		git fetch lsd && git branch temp && git checkout lsd/5.1 && git merge temp && git branch -D temp
 }
 
 function make_kernel {
@@ -79,6 +93,13 @@ function sign_zip {
 		cd $KERNEL_DIR
 }
 
+function sign_zip_bfs {
+		cd $ZIP_MOVE
+		java -jar $UTILS/signapk.jar $UTILS/testkey.x509.pem $UTILS/testkey.pk8 kernel.zip `echo $AK_VER_BFS`.zip
+		rm kernel.zip
+		cd $KERNEL_DIR
+}
+
 DATE_START=$(date +"%s")
 
 
@@ -94,32 +115,22 @@ echo "Making LiquidKernel:"
 echo "-----------------"
 echo -e "${restore}"
 
-while read -p "Do you want to clean stuffs (y/n)? " cchoice
-do
-case "$cchoice" in
-	y|Y )
-		clean_all
-		echo
-		echo "All Cleaned now."
-		break
-		;;
-	n|N )
-		break
-		;;
-	* )
-		echo
-		echo "Invalid try again!"
-		echo
-		;;
-esac
-done
-
-echo
-
-while read -p "Do you want to build kernel (y/n)? " dchoice
+while read -p "Which branch do you want to build (5.1/bfs)? " dchoice
 do
 case "$dchoice" in
-	y|Y)
+	bfs|BFS|Bfs)
+		checkout_bfs
+		make_kernel
+		make_dtb
+		make_modules
+		make_boot
+		make_zip
+		sign_zip_bfs
+		clean_all
+		break
+		;;
+	5.1)
+		checkout_5.1
 		make_kernel
 		make_dtb
 		make_modules
@@ -127,9 +138,6 @@ case "$dchoice" in
 		make_zip
 		sign_zip
 		clean_all
-		break
-		;;
-	n|N )
 		break
 		;;
 	* )
