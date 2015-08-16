@@ -18,23 +18,21 @@ DEFCONFIG="shamu_defconfig"
 BASE_AK_VER="LiquidKernel"
 VER=".v2.6_"
 CURDATE=$(date "+%m-%d-%Y")
-BRANCH="bfs-"
 AK_VER="$BASE_AK_VER$VER$CURDATE"
-AK_VER_BFS="$BASE_AK_VER$VER$BRANCH$CURDATE"
 
 # Vars
-export CROSS_COMPILE=/home/teamliquid/Brock/liquid/prebuilts/gcc/linux-x86/arm/arm-eabi-6.0/bin/arm-eabi-
+export CROSS_COMPILE=/home/teamliquid/Brock/liquify/prebuilts/gcc/linux-x86/arm/arm-eabi-6.0/bin/arm-eabi-
 export ARCH=arm
 export SUBARCH=arm
 
 # Paths
-KERNEL_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu"
-REPACK_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/AnyKernel2"
-MODULES_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/AnyKernel2/modules"
+KERNEL_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu"
+REPACK_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu/utils/AnyKernel2"
+MODULES_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu/utils/AnyKernel2/modules"
 ZIP_MOVE="/www/devs/teamliquid/Kernels/shamu/"
-ZIMAGE_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/arch/arm/boot"
-ZIP_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/zip"
-UTILS="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils"
+ZIMAGE_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu/arch/arm/boot"
+ZIP_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu/utils/zip"
+UTILS="/home/teamliquid/Brock/liquify/kernel/moto/shamu/utils"
 
 # Functions
 function clean_all {
@@ -44,18 +42,6 @@ function clean_all {
 		cd $KERNEL_DIR
 		echo
 		make clean && make mrproper
-}
-
-function checkout_bfs {
-		cd $KERNEL_DIR
-		echo
-		git fetch lsd && git branch temp && git checkout lsd/bfs && git merge temp && git branch -D temp
-}
-
-function checkout_5.1 {
-		cd $KERNEL_DIR
-		echo
-		git fetch lsd && git branch temp && git checkout lsd/5.1 && git merge temp && git branch -D temp
 }
 
 function make_kernel {
@@ -93,13 +79,6 @@ function sign_zip {
 		cd $KERNEL_DIR
 }
 
-function sign_zip_bfs {
-		cd $ZIP_MOVE
-		java -jar $UTILS/signapk.jar $UTILS/testkey.x509.pem $UTILS/testkey.pk8 kernel.zip `echo $AK_VER_BFS`.zip
-		rm kernel.zip
-		cd $KERNEL_DIR
-}
-
 DATE_START=$(date +"%s")
 
 
@@ -115,22 +94,10 @@ echo "Making LiquidKernel:"
 echo "-----------------"
 echo -e "${restore}"
 
-while read -p "Which branch do you want to build (5.1/bfs)? " dchoice
+while read -p "Build kernel? " dchoice
 do
 case "$dchoice" in
-	bfs|BFS|Bfs)
-		checkout_bfs
-		make_kernel
-		make_dtb
-		make_modules
-		make_boot
-		make_zip
-		sign_zip_bfs
-		clean_all
-		break
-		;;
-	5.1)
-		checkout_5.1
+	yes|y)
 		make_kernel
 		make_dtb
 		make_modules
@@ -138,6 +105,9 @@ case "$dchoice" in
 		make_zip
 		sign_zip
 		clean_all
+		break
+		;;
+	no|n)
 		break
 		;;
 	* )
