@@ -21,18 +21,18 @@ CURDATE=$(date "+%m-%d-%Y")
 AK_VER="$BASE_AK_VER$VER$CURDATE"
 
 # Vars
-export CROSS_COMPILE=/home/teamliquid/Brock/liquify/prebuilts/gcc/linux-x86/arm/arm-eabi-6.0/bin/arm-eabi-
+export CROSS_COMPILE=/home/teamliquid/Brock/liquid/prebuilts/gcc/linux-x86/arm/arm-eabi-6.0/bin/arm-eabi-
 export ARCH=arm
 export SUBARCH=arm
 
 # Paths
-KERNEL_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu"
-REPACK_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu/utils/AnyKernel2"
-MODULES_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu/utils/AnyKernel2/modules"
+KERNEL_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu"
+REPACK_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/AnyKernel2"
+MODULES_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/AnyKernel2/modules"
 ZIP_MOVE="/www/devs/teamliquid/Kernels/shamu/"
-ZIMAGE_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu/arch/arm/boot"
-ZIP_DIR="/home/teamliquid/Brock/liquify/kernel/moto/shamu/utils/zip"
-UTILS="/home/teamliquid/Brock/liquify/kernel/moto/shamu/utils"
+ZIMAGE_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/arch/arm/boot"
+ZIP_DIR="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils/zip"
+UTILS="/home/teamliquid/Brock/liquid/kernel/moto/shamu/utils"
 
 # Functions
 function clean_all {
